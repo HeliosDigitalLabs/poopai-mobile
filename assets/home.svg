@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Simplified background circle -->
+  <circle cx="64" cy="64" r="58" fill="#E8F4FD" opacity="0.8"/>
+  <circle cx="64" cy="64" r="56" fill="#F0F8FF" stroke="#B0D4F1" stroke-width="1"/>
+  
+  <!-- House shape -->
+  <path d="M64 24 L32 58 L32 62 L38 62 L38 96 L50 96 L50 82 L60 82 L60 96 L88 96 L88 62 L96 62 L96 58 L64 24 Z" 
+        fill="#FFFFFF" 
+        stroke="#A0C8E8" 
+        stroke-width="2" 
+        stroke-linejoin="round"/>
+  
+  <!-- Roof -->
+  <path d="M64 24 L32 58 L38 58 L64 30 L90 58 L96 58 L64 24 Z" 
+        fill="#C5E2F7" 
+        stroke="#90B8D8" 
+        stroke-width="1"/>
+  
+  <!-- Door -->
+  <rect x="68" y="82" width="12" height="14" 
+        fill="#E0F0FA" 
+        stroke="#90B8D8" 
+        stroke-width="1"/>
+  
+  <!-- Door knob -->
+  <circle cx="77" cy="89" r="1" fill="#90B8D8"/>
+  
+  <!-- Windows -->
+  <rect x="50" y="68" width="8" height="8" 
+        fill="#E0F0FA" 
+        stroke="#90B8D8" 
+        stroke-width="1"/>
+  
+  <!-- Window cross -->
+  <line x1="54" y1="68" x2="54" y2="76" stroke="#90B8D8" stroke-width="0.5"/>
+  <line x1="50" y1="72" x2="58" y2="72" stroke="#90B8D8" stroke-width="0.5"/>
+</svg>

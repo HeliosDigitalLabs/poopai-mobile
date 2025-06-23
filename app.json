@@ -19,7 +19,17 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "PoopAI needs camera access to scan and analyze your poop.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "localhost": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "1.0",
+              "NSExceptionRequiresForwardSecrecy": false
+            }
+          }
+        }
       },
       "usesAppleSignIn": true
     },

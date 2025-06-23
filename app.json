@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "PoopAI",
+    "slug": "poopai",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/poopai_icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "poopai",
+    "splash": {
+      "image": "./assets/poopai_splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trypoopai.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "PoopAI needs camera access to scan and analyze your poop.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "localhost": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "1.0",
+              "NSExceptionRequiresForwardSecrecy": false
+            }
+          }
+        }
+      },
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/poopai_icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.poopai.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/poopai_favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-font",
+      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication",
+      "expo-web-browser",
+      "expo-dev-client"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "70a62df1-cd8c-43d1-835d-7a6cc5139701"
+      }
+    },
+    "owner": "rnglabs"
+  }
+}

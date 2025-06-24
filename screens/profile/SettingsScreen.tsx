@@ -14,13 +14,19 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuth } from "../../context/auth/AuthContext";
 import { useOnboarding } from "../../context/features/OnboardingContext";
 import { useScan } from "../../context/features/ScanContext";
+<<<<<<< HEAD
 import { useBlur } from "../../context/features/BlurContext";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 import { RootStackParamList } from "../../types/navigation";
 import BackButton from "../../components/navigation/BackButton";
 import { AppConfig } from "../../config/app.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+<<<<<<< HEAD
 import ConfirmationModal from "../../components/ui/ConfirmationModal";
 import { Switch } from "react-native-paper";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
 type SettingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -31,16 +37,22 @@ export default function SettingsScreen() {
   const { user, setUser } = useAuth();
   const { resetOnboarding } = useOnboarding();
   const { totalScansPerformed, resetScanCounter } = useScan();
+<<<<<<< HEAD
   const { blurByDefault, setBlurByDefault, initialized } = useBlur();
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const [username, setUsername] = useState(user?.profile.name || "");
   const [isLoading, setIsLoading] = useState(false);
 
+<<<<<<< HEAD
   // Delete all scans state
   const [showFirstDeleteModal, setShowFirstDeleteModal] = useState(false);
   const [showSecondDeleteModal, setShowSecondDeleteModal] = useState(false);
   const [isDeletingScans, setIsDeletingScans] = useState(false);
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const handleBack = () => {
     navigation.goBack();
   };
@@ -179,6 +191,7 @@ export default function SettingsScreen() {
     }
   };
 
+<<<<<<< HEAD
   // Delete all scans functions
   const handleDeleteAllScans = () => {
     console.log("🗑️ User initiated delete all scans");
@@ -253,6 +266,8 @@ export default function SettingsScreen() {
     setShowSecondDeleteModal(false);
   };
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const handleResetAppData = () => {
     Alert.alert(
       "⚠️ Reset All App Data",
@@ -340,6 +355,7 @@ export default function SettingsScreen() {
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
 
+<<<<<<< HEAD
           {/* Blur scan pictures by default toggle with background */}
           <View
             style={{
@@ -371,6 +387,8 @@ export default function SettingsScreen() {
             />
           </View>
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
           <TouchableOpacity
             style={[
               styles.saveButton,
@@ -387,6 +405,7 @@ export default function SettingsScreen() {
           >
             <Text style={styles.saveButtonText}>Terms of Use</Text>
           </TouchableOpacity>
+<<<<<<< HEAD
 
           {/* Delete All Scans Button */}
           <TouchableOpacity
@@ -402,6 +421,8 @@ export default function SettingsScreen() {
               {isDeletingScans ? "Deleting..." : "DELETE ALL SCANS"}
             </Text>
           </TouchableOpacity>
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
         </View>
 
         {/* Development Section - Only show in development mode */}
@@ -461,6 +482,7 @@ export default function SettingsScreen() {
           </View>
         )}
       </ScrollView>
+<<<<<<< HEAD
 
       {/* First Delete Confirmation Modal */}
       <ConfirmationModal
@@ -486,6 +508,8 @@ export default function SettingsScreen() {
         isDestructive={true}
         isLoading={isDeletingScans}
       />
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     </View>
   );
 }

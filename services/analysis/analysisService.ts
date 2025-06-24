@@ -35,7 +35,10 @@ const MOCK_ANALYSIS_RESPONSE: AnalyzeImageResponse = {
   recommendation:
     "💧 Increase daily water intake to 8-10 glasses. Consider adding more leafy greens to your diet for optimal hydration and fiber balance.",
   capturedAt: new Date().toISOString(),
+<<<<<<< HEAD
   scan_id: "mock-scan-id-12345",
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 };
 
 /**
@@ -51,7 +54,10 @@ const MOCK_NO_POOP_RESPONSE: AnalyzeImageResponse = {
   fiberJudgement: "",
   recommendation: "",
   capturedAt: new Date().toISOString(),
+<<<<<<< HEAD
   scan_id: "mock-no-poop-scan-id",
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 };
 
 /**
@@ -217,6 +223,7 @@ async function makeApiCall(
     try {
       const responseData = JSON.parse(responseText);
       console.log("API response parsed successfully");
+<<<<<<< HEAD
       console.log(
         "🔍 Raw server response:",
         JSON.stringify(responseData, null, 2)
@@ -249,6 +256,15 @@ async function makeApiCall(
           JSON.stringify(analysis, null, 2)
         );
         return analysis;
+=======
+
+      // Extract analysis data from the wrapped response
+      if (responseData.analysis) {
+        return responseData.analysis as AnalyzeImageResponse;
+      } else {
+        // If no analysis wrapper, assume direct response (for backward compatibility)
+        return responseData as AnalyzeImageResponse;
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
       }
     } catch (parseError) {
       console.error("Failed to parse JSON response:", parseError);
@@ -346,19 +362,28 @@ export async function analyzeImage(imageUri: string): Promise<AnalysisData> {
     // Generate frontend-only data
     const frontendData = generateFrontendData(imageUri);
 
+<<<<<<< HEAD
     // Combine server response with frontend data, mapping scan_id to id
     const completeAnalysis: AnalysisData = {
       ...analysisResponse,
       id: analysisResponse.scan_id, // Map scan_id from backend to id for frontend
+=======
+    // Combine server response directly with frontend data
+    const completeAnalysis: AnalysisData = {
+      ...analysisResponse,
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
       ...frontendData,
     };
 
     console.log("✅ Image analysis completed successfully");
+<<<<<<< HEAD
     console.log("📋 Complete analysis data - ID:", completeAnalysis.id);
     console.log(
       "📋 Full analysis data:",
       JSON.stringify(completeAnalysis, null, 2)
     );
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     console.log("Analysis score:", completeAnalysis.score);
 
     return completeAnalysis;

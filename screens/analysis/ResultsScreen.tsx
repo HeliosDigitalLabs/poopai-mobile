@@ -9,12 +9,18 @@ import {
   Alert,
   Animated,
   Easing,
+<<<<<<< HEAD
   Modal,
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { LinearGradient } from "expo-linear-gradient";
+<<<<<<< HEAD
 import { BlurView } from "expo-blur";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
@@ -26,7 +32,10 @@ import { AnalysisData } from "../../types/api";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import BlurToggleButton from "../../components/ui/BlurToggleButton";
 import LearnMoreButton from "../../components/ui/LearnMoreButton";
+<<<<<<< HEAD
 import DeleteConfirmationModal from "../../components/ui/DeleteConfirmationModal";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 import AnalyzePrompt from "../../components/camera/AnalyzePrompt";
 import PoopMeterAnimation from "../../components/analysis/PoopMeterAnimation";
 // REMOVED: SaveResultsPopup import - no longer showing auth nudges
@@ -36,7 +45,18 @@ import { useAuth } from "../../context/auth/AuthContext";
 import { useScan } from "../../context/features/ScanContext";
 import { useDimensions } from "../../context/core/DimensionsContext";
 import ResultsPoopbotPrompt from "../../components/analysis/ResultsPoopbotPrompt";
+<<<<<<< HEAD
 import { useBlur } from "../../context/features/BlurContext";
+=======
+import { logEvent } from "../../lib/analytics";
+import {
+  SHARE_CLICKED,
+  SHARE_COMPLETED,
+  LEARN_MORE_OPENED,
+  LEARN_MORE_TIME_SPENT,
+  SCAN_SUBMITTED,
+} from "../../lib/analyticsEvents";
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
 // Import SVG assets
 import HomeSvg from "../../assets/home.svg";
@@ -56,7 +76,10 @@ export default function ResultsScreen() {
   const { user, refreshUserData } = useAuth();
   const { incrementScanCount, totalScansPerformed } = useScan();
   const { screenHeight, screenWidth } = useDimensions();
+<<<<<<< HEAD
   const { blurByDefault } = useBlur();
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
   // Calculate dynamic score size - 5% of screen height
   const scoreFontSize = Math.round(screenHeight * 0.05);
@@ -74,7 +97,11 @@ export default function ResultsScreen() {
   const scanCountedRef = useRef(false);
 
   // State for blur toggle
+<<<<<<< HEAD
   const [isBlurred, setIsBlurred] = useState(blurByDefault);
+=======
+  const [isBlurred, setIsBlurred] = useState(false);
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   // State to control animation flow
   const [showMeterAnimation, setShowMeterAnimation] = useState(true);
   const [showCardMode, setShowCardMode] = useState(false);
@@ -85,11 +112,16 @@ export default function ResultsScreen() {
   const [isExpanded, setIsExpanded] = useState(false);
   // State for button text (changes immediately on click)
   const [buttonShowsCollapse, setButtonShowsCollapse] = useState(false);
+<<<<<<< HEAD
   // State for delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   // State for delete operation
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+=======
+  // State for learn more time tracking
+  const learnMoreStartTime = useRef<number | null>(null);
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   // REMOVED: Auth popup state and timer - no longer showing auth nudges
   // const [showAuthPopup, setShowAuthPopup] = useState(false);
   // const authPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -186,6 +218,24 @@ export default function ResultsScreen() {
   // Use analysis data from route params if available, otherwise fall back to mock data
   let analysisData: AnalysisData = route.params?.analysisData || mockData;
 
+<<<<<<< HEAD
+=======
+  // Track successful scan submission when real analysis data is available
+  useEffect(() => {
+    if (route.params?.analysisData) {
+      logEvent(SCAN_SUBMITTED, {
+        poopScore: route.params.analysisData.score,
+        bristolType: route.params.analysisData.bristolName,
+        bristolTypeNumber: route.params.analysisData.bristolType,
+        maxScore: route.params.analysisData.maxScore,
+        hydrationJudgement: route.params.analysisData.hydrationJudgement,
+        fiberJudgement: route.params.analysisData.fiberJudgement,
+        stoolDescription: route.params.analysisData.stoolDescription,
+      });
+    }
+  }, [route.params?.analysisData]);
+
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   // Clean up review timer on unmount
   useEffect(() => {
     return () => {
@@ -312,6 +362,7 @@ export default function ResultsScreen() {
     };
   }, []);
 
+<<<<<<< HEAD
   // Sync local isBlurred state with blurByDefault when it changes
   useEffect(() => {
     setIsBlurred(blurByDefault);
@@ -320,6 +371,17 @@ export default function ResultsScreen() {
   const handleShare = async () => {
     if (isSharing) return; // Prevent multiple simultaneous shares
 
+=======
+  const handleShare = async () => {
+    if (isSharing) return; // Prevent multiple simultaneous shares
+
+    // Track share clicked
+    logEvent(SHARE_CLICKED, {
+      method: "Link", // Default method for expo sharing
+      hidePoop: isBlurred,
+    });
+
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     // Check if we have a valid photo before attempting to share
     if (!analysisData.photo) {
       Alert.alert(
@@ -419,15 +481,44 @@ export default function ResultsScreen() {
             mimeType: "image/png",
             dialogTitle: "Share your PoopAI results!",
           });
+<<<<<<< HEAD
         } else {
+=======
+
+          // Track successful share
+          logEvent(SHARE_COMPLETED, {
+            method: "Link",
+            success: true,
+          });
+        } else {
+          // Track failed share
+          logEvent(SHARE_COMPLETED, {
+            method: "Link",
+            success: false,
+          });
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
           Alert.alert("Error", "Sharing is not available on this device");
         }
       } else {
         console.error("Card container ref is null");
+<<<<<<< HEAD
+=======
+        logEvent(SHARE_COMPLETED, {
+          method: "Link",
+          success: false,
+        });
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
         Alert.alert("Error", "Unable to capture the card. Please try again.");
       }
     } catch (error) {
       console.error("Error sharing:", error);
+<<<<<<< HEAD
+=======
+      logEvent(SHARE_COMPLETED, {
+        method: "Link",
+        success: false,
+      });
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
       Alert.alert("Error", "Failed to share the image. Please try again.");
     } finally {
       // Restore UI elements
@@ -444,6 +535,19 @@ export default function ResultsScreen() {
 
   const handleLearnMore = () => {
     if (isExpanded) {
+<<<<<<< HEAD
+=======
+      // Track learn more time spent when closing
+      if (learnMoreStartTime.current) {
+        const timeSpent = (Date.now() - learnMoreStartTime.current) / 1000;
+        logEvent(LEARN_MORE_TIME_SPENT, {
+          duration: parseFloat(timeSpent.toFixed(1)),
+          scrolledToBottom: false, // We don't track scroll in this implementation
+        });
+        learnMoreStartTime.current = null;
+      }
+
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
       // Immediately change button text
       setButtonShowsCollapse(false);
 
@@ -476,6 +580,13 @@ export default function ResultsScreen() {
         ]).start();
       });
     } else {
+<<<<<<< HEAD
+=======
+      // Track learn more opened
+      logEvent(LEARN_MORE_OPENED);
+      learnMoreStartTime.current = Date.now();
+
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
       // Immediately change button text
       setButtonShowsCollapse(true);
 
@@ -531,6 +642,7 @@ export default function ResultsScreen() {
     setIsBlurred(!isBlurred);
   };
 
+<<<<<<< HEAD
   const handleDeleteScan = () => {
     setShowDeleteModal(true);
   };
@@ -605,6 +717,8 @@ export default function ResultsScreen() {
     setDeleteError(null);
   };
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const handleMeterAnimationComplete = () => {
     // Start the cinematic transition sequence
     startCinematicTransition();
@@ -1029,6 +1143,7 @@ export default function ResultsScreen() {
                       </Animated.View>
                     )}
 
+<<<<<<< HEAD
                     {/* Trash Button - Top Right of Image */}
                     {!hideUIForShare && !isExpanded && showCardMode && (
                       <Animated.View
@@ -1092,6 +1207,8 @@ export default function ResultsScreen() {
                       </Animated.View>
                     )}
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
                     {/* Full-Screen Mode Content - During Meter Animation */}
                     {showMeterAnimation && <View className="flex-1"></View>}
 
@@ -1443,6 +1560,7 @@ export default function ResultsScreen() {
         </View>
       </Animated.View>
       {/* REMOVED: Save Results Popup - no longer showing auth nudges for 2nd/3rd scans */}
+<<<<<<< HEAD
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
@@ -1585,6 +1703,8 @@ export default function ResultsScreen() {
           </View>
         </Modal>
       )}
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     </View>
   );
 }

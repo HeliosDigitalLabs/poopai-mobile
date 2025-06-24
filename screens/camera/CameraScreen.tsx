@@ -36,9 +36,12 @@ import {
   SCAN_SUBMITTED,
   SCAN_FAILED,
 } from "../../lib/analyticsEvents";
+<<<<<<< HEAD
 import { useBlur } from "../../context/features/BlurContext";
 import BlurOnboardingModal from "../../components/camera/BlurOnboardingModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
 // Import SVGs - keeping for now but will remove AnalyzePromptSvg
 import AnalyzePromptSvg from "../../assets/analyze_prompt.svg";
@@ -61,11 +64,18 @@ interface CameraState {
 export default function CameraScreen() {
   const navigation = useNavigation<CameraScreenNavigationProp>();
   const { isAuthenticated, setShowAuthOverlay } = useAuth();
+<<<<<<< HEAD
   const { scansLeft, isPremium, incrementScanCount } = useScan();
   const { screenHeight, screenWidth } = useDimensions();
   const resultsOpacity = useRef(new Animated.Value(0)).current;
   const controlsScaleAnim = useRef(new Animated.Value(0)).current;
   const { blurByDefault, setBlurByDefault, initialized } = useBlur();
+=======
+  const { scansLeft, isPremium } = useScan();
+  const { screenHeight, screenWidth } = useDimensions();
+  const resultsOpacity = useRef(new Animated.Value(0)).current;
+  const controlsScaleAnim = useRef(new Animated.Value(0)).current;
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
   // Track when camera screen is opened
   useEffect(() => {
@@ -84,6 +94,7 @@ export default function CameraScreen() {
 
   // Add camera warming state to reduce black screen
   const [cameraWarmedUp, setCameraWarmedUp] = useState(false);
+<<<<<<< HEAD
   const [showBlurModal, setShowBlurModal] = useState(false);
 
   useEffect(() => {
@@ -98,6 +109,8 @@ export default function CameraScreen() {
       setShowBlurModal(false);
     }
   }, [initialized, scansLeft]);
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
   useEffect(() => {
     // Check permission immediately on mount for faster initialization
@@ -320,10 +333,13 @@ export default function CameraScreen() {
       isPremium ? "YES (unlimited scans)" : `NO (${scansLeft} scans left)`
     );
 
+<<<<<<< HEAD
     // Log the current blurByDefault value from AsyncStorage
     const blurValue = await AsyncStorage.getItem("blurByDefault");
     console.log("[CameraScreen] blurByDefault in AsyncStorage:", blurValue);
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     // Show scan counter animation first (only for non-premium users)
     if (!isPremium) {
       setCameraState((prev) => ({ ...prev, showScanCounter: true }));
@@ -535,6 +551,7 @@ export default function CameraScreen() {
         initialScansLeft={scansLeft}
         onAnimationComplete={handleScanCounterComplete}
       />
+<<<<<<< HEAD
 
       <BlurOnboardingModal
         visible={showBlurModal}
@@ -543,6 +560,8 @@ export default function CameraScreen() {
           setShowBlurModal(false);
         }}
       />
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     </View>
   );
 }

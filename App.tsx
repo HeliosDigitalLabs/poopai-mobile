@@ -21,7 +21,10 @@ import AuthOverlay from "./components/auth/AuthOverlay";
 import LoadingScreen from "./components/core/LoadingScreen";
 import { initAnalytics, logEvent } from "./lib/analytics";
 import { APP_OPENED, APP_CLOSED } from "./lib/analyticsEvents";
+<<<<<<< HEAD
 import { BlurProvider } from "./context/features/BlurContext";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 
 // Import the global CSS for NativeWind
 import "./global.css";
@@ -48,6 +51,7 @@ function AppContent() {
     <AuthProvider>
       <SubscriptionProvider>
         <ScanProvider>
+<<<<<<< HEAD
           <BlurProvider>
             <OnboardingProvider>
               <QuizProvider>
@@ -91,6 +95,49 @@ function AppContent() {
               </QuizProvider>
             </OnboardingProvider>
           </BlurProvider>
+=======
+          <OnboardingProvider>
+            <QuizProvider>
+              <PaperProvider theme={theme}>
+                <StatusBar style="dark" />
+                {/* Global background that stays consistent during transitions */}
+                <LinearGradient
+                  colors={["#ffffff", "#f1f5f9", "#cbd5e1"]}
+                  style={{ flex: 1 }}
+                >
+                  <ImageBackground
+                    source={require("./assets/toilet-paper.png")}
+                    style={{ flex: 1 }}
+                    resizeMode="cover"
+                    imageStyle={{
+                      opacity: 0.25,
+                      transform: [{ scale: 1 }],
+                    }}
+                  >
+                    <LinearGradient
+                      colors={[
+                        "rgba(123, 170, 247, 0.1)",
+                        "rgba(37, 99, 235, 0.15)",
+                        "rgba(97, 131, 224, 0.1)",
+                      ]}
+                      style={{ flex: 1 }}
+                    >
+                      <AppNavigator />
+                      {/* Loading screen as an overlay instead of replacement */}
+                      {isLoading && (
+                        <LoadingScreen
+                          progress={progress}
+                          onLoadingComplete={handleLoadingComplete}
+                        />
+                      )}
+                    </LinearGradient>
+                  </ImageBackground>
+                </LinearGradient>
+              </PaperProvider>
+              <AuthOverlayRenderer />
+            </QuizProvider>
+          </OnboardingProvider>
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
         </ScanProvider>
       </SubscriptionProvider>
     </AuthProvider>

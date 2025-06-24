@@ -10,7 +10,10 @@ import {
   Dimensions,
   Modal,
   Image,
+<<<<<<< HEAD
   Pressable,
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -18,8 +21,11 @@ import { RootStackParamList } from "../../types/navigation";
 import { ScanService, ScanData } from "../../services/analysis/scanService";
 import { BlurView } from "expo-blur";
 import { logEvent } from "../../lib/analytics";
+<<<<<<< HEAD
 import DeleteConfirmationModal from "../../components/ui/DeleteConfirmationModal";
 import { Ionicons } from "@expo/vector-icons";
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 import {
   CALENDAR_OPENED,
   CALENDAR_DAY_CLICKED,
@@ -49,9 +55,12 @@ export default function CalendarScreen({ navigation }: Props) {
   const [signedImageUrls, setSignedImageUrls] = useState<
     Record<string, string>
   >({});
+<<<<<<< HEAD
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [scanToDelete, setScanToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const screenStartTime = useRef<number>(Date.now());
 
   // Track calendar opened
@@ -81,12 +90,15 @@ export default function CalendarScreen({ navigation }: Props) {
     setScansByDate(grouped);
   }, [scans]);
 
+<<<<<<< HEAD
   // Debug: Watch for deleteModalVisible changes
   useEffect(() => {
     console.log("🔍 deleteModalVisible changed to:", deleteModalVisible);
     console.log("🔍 scanToDelete changed to:", scanToDelete);
   }, [deleteModalVisible, scanToDelete]);
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const loadScans = async () => {
     try {
       setLoading(true);
@@ -126,6 +138,7 @@ export default function CalendarScreen({ navigation }: Props) {
     }
   };
 
+<<<<<<< HEAD
   const handleDeleteScan = (scanId: string) => {
     console.log("🗑️ Delete button pressed for scan:", scanId);
     setModalVisible(false); // Hide the calendar modal
@@ -177,6 +190,8 @@ export default function CalendarScreen({ navigation }: Props) {
     setScanToDelete(null);
   };
 
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -502,6 +517,7 @@ export default function CalendarScreen({ navigation }: Props) {
               <ScrollView style={styles.modalScroll}>
                 {selectedDateScans.map((scan, index) => (
                   <View key={scan.id} style={styles.scanItem}>
+<<<<<<< HEAD
                     {/* Debug: Log scan ID */}
                     {(() => {
                       console.log("📊 Rendering scan with ID:", scan.id);
@@ -553,6 +569,25 @@ export default function CalendarScreen({ navigation }: Props) {
                           color="rgba(220, 38, 38, 0.8)"
                         />
                       </Pressable>
+=======
+                    <View style={styles.scanHeader}>
+                      <View
+                        style={[
+                          styles.bristolIndicator,
+                          {
+                            backgroundColor: getBristolColor(
+                              scan.analysis.bristolType
+                            ),
+                          },
+                        ]}
+                      />
+                      <Text style={styles.scanTime}>
+                        {formatTime(scan.created_at)}
+                      </Text>
+                      <Text style={styles.bristolType}>
+                        Type {scan.analysis.bristolType}
+                      </Text>
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
                     </View>
 
                     {/* Scan Image */}
@@ -586,6 +621,7 @@ export default function CalendarScreen({ navigation }: Props) {
           </View>
         </BlurView>
       </Modal>
+<<<<<<< HEAD
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
@@ -600,6 +636,8 @@ export default function CalendarScreen({ navigation }: Props) {
         console.log("🔍 Modal state - scanToDelete:", scanToDelete);
         return null;
       })()}
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
     </SafeAreaView>
   );
 }
@@ -840,6 +878,7 @@ const styles = StyleSheet.create({
   scanHeader: {
     flexDirection: "row",
     alignItems: "center",
+<<<<<<< HEAD
     justifyContent: "space-between",
     marginBottom: 8,
   },
@@ -848,6 +887,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
+=======
+    marginBottom: 8,
+  },
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
   bristolIndicator: {
     width: 12,
     height: 12,
@@ -896,6 +939,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 12,
   },
+<<<<<<< HEAD
   deleteButton: {
     padding: 12,
     zIndex: 1000,
@@ -917,4 +961,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.3)",
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
+=======
+>>>>>>> 5a9bbd588055ef2a2b282113038f674c9f6c7304
 });

@@ -14,24 +14,30 @@ export default function OnboardingScreen() {
       text: "Hi! I'm PoopAI.",
     },
     {
-      text: "I was trained on countless poop samples. I've seen it all.",
+      text: "Trained from countless poops, I've truly seen it all.",
     },
     {
-      text: "Every poop says a thousand words. I'll help you read them.",
+      text: "After all that, one thing's clear: every poop says a thousand words.",
     },
     {
-      text: "Ready to start scanning poop?",
+      text: "Now I’m here to show you exactly what yours is saying.",
+    },
+    {
+      text: "Just take a photo and I'll break it all down before you can even flush.",
+    },
+    {
+      text: "Ready to start scanning your poop?",
       buttonText: "Let's go!",
       onButtonPress: () => {
         setShowDialogue(false);
-        (navigation as any).navigate("MicroQuiz");
+        (navigation as any).navigate("PreQuiz");
       },
     },
   ];
 
   const handleDialogueComplete = () => {
     setShowDialogue(false);
-    (navigation as any).navigate("MicroQuiz");
+    (navigation as any).navigate("PreQuiz");
   };
 
   return (

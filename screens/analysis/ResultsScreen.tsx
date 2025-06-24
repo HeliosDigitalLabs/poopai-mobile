@@ -9,10 +9,12 @@ import {
   Alert,
   Animated,
   Easing,
+  Modal,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
@@ -24,6 +26,7 @@ import { AnalysisData } from "../../types/api";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import BlurToggleButton from "../../components/ui/BlurToggleButton";
 import LearnMoreButton from "../../components/ui/LearnMoreButton";
+import DeleteConfirmationModal from "../../components/ui/DeleteConfirmationModal";
 import AnalyzePrompt from "../../components/camera/AnalyzePrompt";
 import PoopMeterAnimation from "../../components/analysis/PoopMeterAnimation";
 // REMOVED: SaveResultsPopup import - no longer showing auth nudges
@@ -33,14 +36,7 @@ import { useAuth } from "../../context/auth/AuthContext";
 import { useScan } from "../../context/features/ScanContext";
 import { useDimensions } from "../../context/core/DimensionsContext";
 import ResultsPoopbotPrompt from "../../components/analysis/ResultsPoopbotPrompt";
-import { logEvent } from "../../lib/analytics";
-import {
-  SHARE_CLICKED,
-  SHARE_COMPLETED,
-  LEARN_MORE_OPENED,
-  LEARN_MORE_TIME_SPENT,
-  SCAN_SUBMITTED,
-} from "../../lib/analyticsEvents";
+import { useBlur } from "../../context/features/BlurContext";
 
 // Import SVG assets
 import HomeSvg from "../../assets/home.svg";
@@ -60,6 +56,7 @@ export default function ResultsScreen() {
   const { user, refreshUserData } = useAuth();
   const { incrementScanCount, totalScansPerformed } = useScan();
   const { screenHeight, screenWidth } = useDimensions();
+  const { blurByDefault } = useBlur();
 
   // Calculate dynamic score size - 5% of screen height
   const scoreFontSize = Math.round(screenHeight * 0.05);
@@ -77,7 +74,7 @@ export default function ResultsScreen() {
   const scanCountedRef = useRef(false);
 
   // State for blur toggle
-  const [isBlurred, setIsBlurred] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(blurByDefault);
   // State to control animation flow
   const [showMeterAnimation, setShowMeterAnimation] = useState(true);
   const [showCardMode, setShowCardMode] = useState(false);
@@ -88,8 +85,11 @@ export default function ResultsScreen() {
   const [isExpanded, setIsExpanded] = useState(false);
   // State for button text (changes immediately on click)
   const [buttonShowsCollapse, setButtonShowsCollapse] = useState(false);
-  // State for learn more time tracking
-  const learnMoreStartTime = useRef<number | null>(null);
+  // State for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // State for delete operation
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // REMOVED: Auth popup state and timer - no longer showing auth nudges
   // const [showAuthPopup, setShowAuthPopup] = useState(false);
   // const authPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,21 +185,6 @@ export default function ResultsScreen() {
   // 🎯 DATA SOURCE SELECTION
   // Use analysis data from route params if available, otherwise fall back to mock data
   let analysisData: AnalysisData = route.params?.analysisData || mockData;
-
-  // Track successful scan submission when real analysis data is available
-  useEffect(() => {
-    if (route.params?.analysisData) {
-      logEvent(SCAN_SUBMITTED, {
-        poopScore: route.params.analysisData.score,
-        bristolType: route.params.analysisData.bristolName,
-        bristolTypeNumber: route.params.analysisData.bristolType,
-        maxScore: route.params.analysisData.maxScore,
-        hydrationJudgement: route.params.analysisData.hydrationJudgement,
-        fiberJudgement: route.params.analysisData.fiberJudgement,
-        stoolDescription: route.params.analysisData.stoolDescription,
-      });
-    }
-  }, [route.params?.analysisData]);
 
   // Clean up review timer on unmount
   useEffect(() => {
@@ -327,14 +312,13 @@ export default function ResultsScreen() {
     };
   }, []);
 
+  // Sync local isBlurred state with blurByDefault when it changes
+  useEffect(() => {
+    setIsBlurred(blurByDefault);
+  }, [blurByDefault]);
+
   const handleShare = async () => {
     if (isSharing) return; // Prevent multiple simultaneous shares
-
-    // Track share clicked
-    logEvent(SHARE_CLICKED, {
-      method: "Link", // Default method for expo sharing
-      hidePoop: isBlurred,
-    });
 
     // Check if we have a valid photo before attempting to share
     if (!analysisData.photo) {
@@ -435,34 +419,15 @@ export default function ResultsScreen() {
             mimeType: "image/png",
             dialogTitle: "Share your PoopAI results!",
           });
-
-          // Track successful share
-          logEvent(SHARE_COMPLETED, {
-            method: "Link",
-            success: true,
-          });
         } else {
-          // Track failed share
-          logEvent(SHARE_COMPLETED, {
-            method: "Link",
-            success: false,
-          });
           Alert.alert("Error", "Sharing is not available on this device");
         }
       } else {
         console.error("Card container ref is null");
-        logEvent(SHARE_COMPLETED, {
-          method: "Link",
-          success: false,
-        });
         Alert.alert("Error", "Unable to capture the card. Please try again.");
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      logEvent(SHARE_COMPLETED, {
-        method: "Link",
-        success: false,
-      });
       Alert.alert("Error", "Failed to share the image. Please try again.");
     } finally {
       // Restore UI elements
@@ -479,16 +444,6 @@ export default function ResultsScreen() {
 
   const handleLearnMore = () => {
     if (isExpanded) {
-      // Track learn more time spent when closing
-      if (learnMoreStartTime.current) {
-        const timeSpent = (Date.now() - learnMoreStartTime.current) / 1000;
-        logEvent(LEARN_MORE_TIME_SPENT, {
-          duration: parseFloat(timeSpent.toFixed(1)),
-          scrolledToBottom: false, // We don't track scroll in this implementation
-        });
-        learnMoreStartTime.current = null;
-      }
-
       // Immediately change button text
       setButtonShowsCollapse(false);
 
@@ -521,10 +476,6 @@ export default function ResultsScreen() {
         ]).start();
       });
     } else {
-      // Track learn more opened
-      logEvent(LEARN_MORE_OPENED);
-      learnMoreStartTime.current = Date.now();
-
       // Immediately change button text
       setButtonShowsCollapse(true);
 
@@ -578,6 +529,80 @@ export default function ResultsScreen() {
 
   const toggleBlur = () => {
     setIsBlurred(!isBlurred);
+  };
+
+  const handleDeleteScan = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
+
+    // Check if we have an analysis ID
+    if (!analysisData.id) {
+      console.error("❌ No analysis ID available for deletion");
+      setDeleteError("Unable to delete scan - no ID found");
+      return;
+    }
+
+    console.log("🗑️ Attempting to delete scan with ID:", analysisData.id);
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      // Get auth token
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log(
+        "🗑️ Making DELETE request to:",
+        `${AppConfig.api.baseUrl}/api/user/scan/${analysisData.id}`
+      );
+
+      // Make DELETE request to the backend
+      const response = await fetch(
+        `${AppConfig.api.baseUrl}/api/user/scan/${analysisData.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`
+        );
+      }
+
+      console.log("✅ Scan deleted successfully");
+
+      // Navigate back to home after successful deletion
+      setTimeout(() => {
+        setIsDeleting(false);
+        navigation.navigate("Home");
+      }, 1500); // Brief delay to show success state
+    } catch (error) {
+      console.error("❌ Error deleting scan:", error);
+      setIsDeleting(false);
+      setDeleteError(
+        error instanceof Error ? error.message : "Failed to delete scan"
+      );
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  const handleDismissDeleteError = () => {
+    setDeleteError(null);
   };
 
   const handleMeterAnimationComplete = () => {
@@ -1004,6 +1029,69 @@ export default function ResultsScreen() {
                       </Animated.View>
                     )}
 
+                    {/* Trash Button - Top Right of Image */}
+                    {!hideUIForShare && !isExpanded && showCardMode && (
+                      <Animated.View
+                        style={{
+                          position: "absolute",
+                          top: blurToggleTop, // Same animated top position as blur toggle
+                          right: 15, // Fixed position at right (matching blur toggle's 15px from left)
+                          zIndex: 10,
+                        }}
+                      >
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={handleDeleteScan}
+                        >
+                          <BlurView
+                            intensity={8}
+                            tint="dark"
+                            style={{
+                              borderRadius: 24,
+                              width: 48,
+                              height: 48,
+                              borderWidth: 1.5,
+                              borderColor: "rgba(107, 114, 128, 0.5)", // Gray border
+                              backgroundColor: "rgba(107, 114, 128, 0.3)", // Gray background
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 8,
+                              elevation: 8,
+                              overflow: "hidden",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <View
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: "rgba(107, 114, 128, 0.25)", // Gray overlay
+                                borderRadius: 24,
+                              }}
+                            />
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={24}
+                                color="#FFFFFF"
+                              />
+                            </View>
+                          </BlurView>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    )}
+
                     {/* Full-Screen Mode Content - During Meter Animation */}
                     {showMeterAnimation && <View className="flex-1"></View>}
 
@@ -1355,6 +1443,148 @@ export default function ResultsScreen() {
         </View>
       </Animated.View>
       {/* REMOVED: Save Results Popup - no longer showing auth nudges for 2nd/3rd scans */}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onDelete={handleConfirmDelete}
+        onKeep={handleCancelDelete}
+      />
+
+      {/* Delete Loading Modal */}
+      {isDeleting && (
+        <Modal visible={true} transparent={true} animationType="fade">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <BlurView
+              intensity={20}
+              tint="dark"
+              style={{
+                borderRadius: 24,
+                padding: 32,
+                borderWidth: 1.5,
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                alignItems: "center",
+                overflow: "hidden",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: screenHeight * 0.024,
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                  textAlign: "center",
+                  marginBottom: 16,
+                }}
+              >
+                Deleting Scan...
+              </Text>
+              <Text
+                style={{
+                  fontSize: screenHeight * 0.018,
+                  color: "rgba(255, 255, 255, 0.8)",
+                  textAlign: "center",
+                }}
+              >
+                Please wait
+              </Text>
+            </BlurView>
+          </View>
+        </Modal>
+      )}
+
+      {/* Delete Error Modal */}
+      {deleteError && (
+        <Modal visible={true} transparent={true} animationType="fade">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 20,
+            }}
+          >
+            <BlurView
+              intensity={20}
+              tint="dark"
+              style={{
+                borderRadius: 24,
+                padding: 24,
+                borderWidth: 1.5,
+                borderColor: "rgba(239, 68, 68, 0.4)",
+                backgroundColor: "rgba(239, 68, 68, 0.2)",
+                maxWidth: screenWidth * 0.85,
+                overflow: "hidden",
+              }}
+            >
+              <View style={{ alignItems: "center" }}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={48}
+                  color="#EF4444"
+                  style={{ marginBottom: 16 }}
+                />
+                <Text
+                  style={{
+                    fontSize: screenHeight * 0.024,
+                    fontWeight: "700",
+                    color: "#FFFFFF",
+                    textAlign: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  Delete Failed
+                </Text>
+                <Text
+                  style={{
+                    fontSize: screenHeight * 0.018,
+                    color: "rgba(255, 255, 255, 0.8)",
+                    textAlign: "center",
+                    marginBottom: 24,
+                    lineHeight: screenHeight * 0.024,
+                  }}
+                >
+                  {deleteError}
+                </Text>
+                <TouchableOpacity onPress={handleDismissDeleteError}>
+                  <BlurView
+                    intensity={15}
+                    tint="light"
+                    style={{
+                      borderRadius: 16,
+                      paddingVertical: 12,
+                      paddingHorizontal: 24,
+                      borderWidth: 1.5,
+                      borderColor: "rgba(255, 255, 255, 0.4)",
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: screenHeight * 0.02,
+                        fontWeight: "600",
+                        color: "#FFFFFF",
+                        textAlign: "center",
+                      }}
+                    >
+                      OK
+                    </Text>
+                  </BlurView>
+                </TouchableOpacity>
+              </View>
+            </BlurView>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }

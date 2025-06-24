@@ -15,6 +15,7 @@ interface CameraViewProps {
   isReady: boolean;
   isCameraWarmed: boolean;
   flashMode?: FlashMode;
+  onCameraReady?: () => void; // New callback for when camera is mounted
 }
 
 export default function CameraView({
@@ -22,6 +23,7 @@ export default function CameraView({
   isReady,
   isCameraWarmed,
   flashMode = "auto",
+  onCameraReady,
 }: CameraViewProps) {
   const cameraRef = useRef<ExpoCamera | null>(null);
   const rippleAnim = useRef(new Animated.Value(0)).current;
@@ -124,6 +126,10 @@ export default function CameraView({
         facing="back"
         ratio="16:9"
         animateShutter={false}
+        onCameraReady={() => {
+          console.log("📷 Camera is ready and mounted");
+          onCameraReady?.();
+        }}
       />
 
       {/* Center focus indicator - Animated SVG when camera is ready */}

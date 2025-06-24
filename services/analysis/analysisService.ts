@@ -35,6 +35,7 @@ const MOCK_ANALYSIS_RESPONSE: AnalyzeImageResponse = {
   recommendation:
     "💧 Increase daily water intake to 8-10 glasses. Consider adding more leafy greens to your diet for optimal hydration and fiber balance.",
   capturedAt: new Date().toISOString(),
+  scan_id: "mock-scan-id-12345",
 };
 
 /**
@@ -50,6 +51,7 @@ const MOCK_NO_POOP_RESPONSE: AnalyzeImageResponse = {
   fiberJudgement: "",
   recommendation: "",
   capturedAt: new Date().toISOString(),
+  scan_id: "mock-no-poop-scan-id",
 };
 
 /**
@@ -215,13 +217,38 @@ async function makeApiCall(
     try {
       const responseData = JSON.parse(responseText);
       console.log("API response parsed successfully");
+      console.log(
+        "🔍 Raw server response:",
+        JSON.stringify(responseData, null, 2)
+      );
+      console.log("📋 Root-level scan_id from response:", responseData.scan_id);
 
       // Extract analysis data from the wrapped response
       if (responseData.analysis) {
-        return responseData.analysis as AnalyzeImageResponse;
+        const analysis = responseData.analysis as AnalyzeImageResponse;
+        // Add scan_id from the root level response to the analysis object
+        analysis.scan_id = responseData.scan_id;
+        console.log(
+          "📋 Analysis scan_id received from server:",
+          analysis.scan_id
+        );
+        console.log(
+          "🔍 Analysis object from server:",
+          JSON.stringify(analysis, null, 2)
+        );
+        return analysis;
       } else {
         // If no analysis wrapper, assume direct response (for backward compatibility)
-        return responseData as AnalyzeImageResponse;
+        const analysis = responseData as AnalyzeImageResponse;
+        console.log(
+          "📋 Analysis scan_id received from server:",
+          analysis.scan_id
+        );
+        console.log(
+          "🔍 Direct analysis response from server:",
+          JSON.stringify(analysis, null, 2)
+        );
+        return analysis;
       }
     } catch (parseError) {
       console.error("Failed to parse JSON response:", parseError);
@@ -319,13 +346,19 @@ export async function analyzeImage(imageUri: string): Promise<AnalysisData> {
     // Generate frontend-only data
     const frontendData = generateFrontendData(imageUri);
 
-    // Combine server response directly with frontend data
+    // Combine server response with frontend data, mapping scan_id to id
     const completeAnalysis: AnalysisData = {
       ...analysisResponse,
+      id: analysisResponse.scan_id, // Map scan_id from backend to id for frontend
       ...frontendData,
     };
 
     console.log("✅ Image analysis completed successfully");
+    console.log("📋 Complete analysis data - ID:", completeAnalysis.id);
+    console.log(
+      "📋 Full analysis data:",
+      JSON.stringify(completeAnalysis, null, 2)
+    );
     console.log("Analysis score:", completeAnalysis.score);
 
     return completeAnalysis;

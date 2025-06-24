@@ -36,6 +36,9 @@ import {
   SCAN_SUBMITTED,
   SCAN_FAILED,
 } from "../../lib/analyticsEvents";
+import { useBlur } from "../../context/features/BlurContext";
+import BlurOnboardingModal from "../../components/camera/BlurOnboardingModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Import SVGs - keeping for now but will remove AnalyzePromptSvg
 import AnalyzePromptSvg from "../../assets/analyze_prompt.svg";
@@ -58,10 +61,11 @@ interface CameraState {
 export default function CameraScreen() {
   const navigation = useNavigation<CameraScreenNavigationProp>();
   const { isAuthenticated, setShowAuthOverlay } = useAuth();
-  const { scansLeft, isPremium } = useScan();
+  const { scansLeft, isPremium, incrementScanCount } = useScan();
   const { screenHeight, screenWidth } = useDimensions();
   const resultsOpacity = useRef(new Animated.Value(0)).current;
   const controlsScaleAnim = useRef(new Animated.Value(0)).current;
+  const { blurByDefault, setBlurByDefault, initialized } = useBlur();
 
   // Track when camera screen is opened
   useEffect(() => {
@@ -80,6 +84,20 @@ export default function CameraScreen() {
 
   // Add camera warming state to reduce black screen
   const [cameraWarmedUp, setCameraWarmedUp] = useState(false);
+  const [showBlurModal, setShowBlurModal] = useState(false);
+
+  useEffect(() => {
+    if (initialized && scansLeft === 0) {
+      AsyncStorage.getItem("blurByDefault").then((stored) => {
+        // Only show modal if user has 0 scans and hasn't made a choice yet (default true)
+        if (stored === null || stored === "true") {
+          setShowBlurModal(true);
+        }
+      });
+    } else {
+      setShowBlurModal(false);
+    }
+  }, [initialized, scansLeft]);
 
   useEffect(() => {
     // Check permission immediately on mount for faster initialization
@@ -95,10 +113,7 @@ export default function CameraScreen() {
             isReady: true,
           }));
 
-          // Warm up camera to reduce initialization delay
-          setTimeout(() => {
-            setCameraWarmedUp(true);
-          }, 1000); // Reduced to 1 second - animation shows but doesn't overstay
+          // Don't use a fixed timeout - let the camera tell us when it's ready
         } else {
           // Only request if we don't have permission
           requestCameraPermission();
@@ -112,6 +127,30 @@ export default function CameraScreen() {
     checkPermissionAndInit();
   }, []);
 
+  // Handle when camera is actually ready
+  const handleCameraReady = () => {
+    console.log("📷 Camera ready callback received");
+    setCameraWarmedUp(true);
+  };
+
+  // Re-check permission when app comes back to foreground
+  useEffect(() => {
+    const checkPermissionPeriodically = setInterval(async () => {
+      if (!cameraState.hasPermission) {
+        const { status } = await Camera.getCameraPermissionsAsync();
+        if (status === "granted") {
+          setCameraState((prev) => ({
+            ...prev,
+            hasPermission: true,
+            isReady: true,
+          }));
+        }
+      }
+    }, 2000); // Check every 2 seconds when permission is denied
+
+    return () => clearInterval(checkPermissionPeriodically);
+  }, [cameraState.hasPermission]);
+
   const requestCameraPermission = async () => {
     try {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -123,11 +162,11 @@ export default function CameraScreen() {
         isReady: granted,
       }));
 
-      if (!granted) {
-        Alert.alert("Permission Denied", "Camera access is required to scan.");
-      }
+      // Don't show in-app alerts - let the native permission dialog handle it
+      // Camera will warm up when onCameraReady callback is triggered
     } catch (error) {
-      Alert.alert("Camera Error", "Unable to request camera permission");
+      console.error("Camera permission request error:", error);
+      // Only log errors, don't show alerts
     }
   };
 
@@ -280,6 +319,10 @@ export default function CameraScreen() {
       "Premium user:",
       isPremium ? "YES (unlimited scans)" : `NO (${scansLeft} scans left)`
     );
+
+    // Log the current blurByDefault value from AsyncStorage
+    const blurValue = await AsyncStorage.getItem("blurByDefault");
+    console.log("[CameraScreen] blurByDefault in AsyncStorage:", blurValue);
 
     // Show scan counter animation first (only for non-premium users)
     if (!isPremium) {
@@ -442,6 +485,7 @@ export default function CameraScreen() {
             onCapture={handleCapture}
             isReady={cameraState.isReady}
             isCameraWarmed={cameraWarmedUp}
+            onCameraReady={handleCameraReady}
           />
 
           {/* Scan Counter - positioned lower from top */}
@@ -490,6 +534,14 @@ export default function CameraScreen() {
         isVisible={cameraState.showScanCounter}
         initialScansLeft={scansLeft}
         onAnimationComplete={handleScanCounterComplete}
+      />
+
+      <BlurOnboardingModal
+        visible={showBlurModal}
+        onSelect={async (blur) => {
+          await setBlurByDefault(blur);
+          setShowBlurModal(false);
+        }}
       />
     </View>
   );

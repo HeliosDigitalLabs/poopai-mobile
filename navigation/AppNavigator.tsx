@@ -18,6 +18,7 @@ import SymptomsScreen from "../screens/profile/SymptomsScreen";
 import CalendarScreen from "../screens/calendar/CalendarScreen";
 import PaymentScreen from "../screens/subscription/PaymentScreen";
 import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
+import PreQuizScreen from "../screens/onboarding/PreQuizScreen";
 import MicroQuizScreen from "../screens/onboarding/MicroQuizScreen";
 import PersonalizationScreen from "../screens/onboarding/PersonalizationScreen";
 import { useOnboarding } from "../context/features/OnboardingContext";
@@ -92,6 +93,11 @@ export default function AppNavigator() {
               name="Onboarding"
               component={OnboardingScreen}
               options={{ gestureEnabled: false }} // Disable gestures during onboarding
+            />
+            <Stack.Screen
+              name="PreQuiz"
+              component={PreQuizScreen}
+              options={{ gestureEnabled: true }} // Allow swipe back to onboarding
             />
             <Stack.Screen
               name="MicroQuiz"

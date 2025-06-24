@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Modal,
@@ -11,11 +11,13 @@ import {
   TextInput,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { useAuth } from "../../context/auth/AuthContext";
 import { useQuiz } from "../../context/features/QuizContext";
 import { authService } from "../../services/auth/authService";
+import { socialAuthService } from "../../services/auth/socialAuthService";
 import { Ionicons } from "@expo/vector-icons";
 
 interface OnboardingAuthModalProps {
@@ -40,8 +42,17 @@ const OnboardingAuthModal: React.FC<OnboardingAuthModalProps> = ({
   initialMode = "create-account-selection",
 }) => {
   const [authMode, setAuthMode] = useState<OnboardingAuthMode>(initialMode);
-  const { login, signup, isLoading } = useAuth();
+  const { login, signup, loginWithGoogle, loginWithApple, isLoading } =
+    useAuth();
   const { answers } = useQuiz();
+
+  // Social auth availability
+  const [isGoogleAvailable, setIsGoogleAvailable] = useState(false);
+  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+
+  // Local loading states for social auth (separate from global auth loading)
+  const [googleAuthLoading, setGoogleAuthLoading] = useState(false);
+  const [appleAuthLoading, setAppleAuthLoading] = useState(false);
 
   // Form states
   const [name, setName] = useState("");
@@ -57,6 +68,23 @@ const OnboardingAuthModal: React.FC<OnboardingAuthModalProps> = ({
 
   // Forgot password state
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
+
+  // Check social auth availability on mount
+  useEffect(() => {
+    const checkSocialAuthAvailability = async () => {
+      const googleAvailable = socialAuthService.isGoogleSignInAvailable();
+      const appleAvailable = await socialAuthService.isAppleSignInAvailable();
+
+      console.log("🔍 Social auth availability check (OnboardingAuthModal):");
+      console.log("  Google available:", googleAvailable);
+      console.log("  Apple available:", appleAvailable);
+      console.log("  Platform:", Platform.OS);
+
+      setIsGoogleAvailable(googleAvailable);
+      setIsAppleAvailable(appleAvailable);
+    };
+    checkSocialAuthAvailability();
+  }, []);
 
   const clearErrors = () => {
     setNameError("");
@@ -211,12 +239,84 @@ const OnboardingAuthModal: React.FC<OnboardingAuthModalProps> = ({
     }
   };
 
+  const handleGoogleAuth = async () => {
+    console.log("🔍 Google auth debug - availability:", isGoogleAvailable);
+
+    if (!isGoogleAvailable) {
+      Alert.alert(
+        "Development Build Required",
+        "Google Sign-In requires a development build. Please create a development build or use email authentication.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    try {
+      console.log("🔵 Starting Google authentication...");
+      setGoogleAuthLoading(true); // Use local loading state
+      await loginWithGoogle();
+      console.log("✅ Google authentication successful");
+      clearForm();
+      onClose();
+    } catch (error: any) {
+      console.error("❌ Google authentication error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
+      Alert.alert(
+        "Google Sign-In Failed",
+        `Error: ${error.message || "Unable to sign in with Google. Please try again."}`,
+        [{ text: "OK" }]
+      );
+    } finally {
+      setGoogleAuthLoading(false); // Reset local loading state
+    }
+  };
+
+  const handleAppleAuth = async () => {
+    console.log("🍎 Apple auth debug - availability:", isAppleAvailable);
+    console.log("🍎 Platform:", Platform.OS);
+
+    if (!isAppleAvailable) {
+      Alert.alert(
+        "Apple Sign-In Unavailable",
+        "Apple Sign-In is only available on iOS devices with iOS 13 or later.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    try {
+      console.log("🍎 Starting Apple authentication...");
+      setAppleAuthLoading(true); // Use local loading state
+      await loginWithApple();
+      console.log("✅ Apple authentication successful");
+      clearForm();
+      onClose();
+    } catch (error: any) {
+      console.error("❌ Apple authentication error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
+      Alert.alert(
+        "Apple Sign-In Failed",
+        `Error: ${error.message || "Unable to sign in with Apple. Please try again."}`,
+        [{ text: "OK" }]
+      );
+    } finally {
+      setAppleAuthLoading(false); // Reset local loading state
+    }
+  };
+
   const renderCreateAccountSelection = () => (
     <View style={styles.methodContainer}>
       <Text style={styles.title}>Save your preferences?</Text>
       <Text style={styles.subtitle}>
-        Create an account to save your quiz answers and track your scans over
-        time
+        Create an account to save your answers and keep track of your scans.
       </Text>
 
       {/* Email Create Account Button */}
@@ -234,46 +334,74 @@ const OnboardingAuthModal: React.FC<OnboardingAuthModalProps> = ({
         </BlurView>
       </TouchableOpacity>
 
-      {/* Google Create Account Button (Coming Soon) */}
+      {/* Google Create Account Button */}
       <TouchableOpacity
         style={[styles.methodButton, styles.googleButton]}
-        disabled={true}
+        onPress={handleGoogleAuth}
+        disabled={googleAuthLoading || !isGoogleAvailable}
       >
         <BlurView intensity={30} tint="light" style={styles.methodButtonBlur}>
           <Ionicons
             name="logo-google"
             size={24}
-            color="rgba(255, 255, 255, 0.5)"
+            color={
+              googleAuthLoading || !isGoogleAvailable
+                ? "rgba(255, 255, 255, 0.5)"
+                : "rgba(255, 255, 255, 0.9)"
+            }
           />
           <Text
             style={[
               styles.methodButtonText,
-              { color: "rgba(255, 255, 255, 0.5)" },
+              {
+                color:
+                  googleAuthLoading || !isGoogleAvailable
+                    ? "rgba(255, 255, 255, 0.5)"
+                    : "rgba(255, 255, 255, 0.9)",
+              },
             ]}
           >
-            Create with Google (Soon)
+            {!isGoogleAvailable
+              ? "Google (Requires Dev Build)"
+              : googleAuthLoading
+                ? "Signing In..."
+                : "Create with Google"}
           </Text>
         </BlurView>
       </TouchableOpacity>
 
-      {/* Apple Create Account Button (Coming Soon) */}
+      {/* Apple Create Account Button */}
       <TouchableOpacity
         style={[styles.methodButton, styles.appleButton]}
-        disabled={true}
+        onPress={handleAppleAuth}
+        disabled={appleAuthLoading || !isAppleAvailable}
       >
         <BlurView intensity={30} tint="light" style={styles.methodButtonBlur}>
           <Ionicons
             name="logo-apple"
             size={24}
-            color="rgba(255, 255, 255, 0.5)"
+            color={
+              appleAuthLoading || !isAppleAvailable
+                ? "rgba(255, 255, 255, 0.5)"
+                : "rgba(255, 255, 255, 0.9)"
+            }
           />
           <Text
             style={[
               styles.methodButtonText,
-              { color: "rgba(255, 255, 255, 0.5)" },
+              {
+                color:
+                  appleAuthLoading || !isAppleAvailable
+                    ? "rgba(255, 255, 255, 0.5)"
+                    : "rgba(255, 255, 255, 0.9)",
+              },
             ]}
           >
-            Create with Apple (Soon)
+            {!isAppleAvailable
+              ? "Apple (iOS Only)"
+              : appleAuthLoading
+                ? "Signing In..."
+                : "Create with Apple"}
           </Text>
         </BlurView>
       </TouchableOpacity>
@@ -618,7 +746,12 @@ const OnboardingAuthModal: React.FC<OnboardingAuthModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        console.log(
+          "🚫 Modal onRequestClose called - close button should now work properly"
+        );
+        onClose();
+      }}
     >
       <View style={styles.overlay}>
         <KeyboardAvoidingView

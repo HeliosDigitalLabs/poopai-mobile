@@ -14,10 +14,13 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuth } from "../../context/auth/AuthContext";
 import { useOnboarding } from "../../context/features/OnboardingContext";
 import { useScan } from "../../context/features/ScanContext";
+import { useBlur } from "../../context/features/BlurContext";
 import { RootStackParamList } from "../../types/navigation";
 import BackButton from "../../components/navigation/BackButton";
 import { AppConfig } from "../../config/app.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ConfirmationModal from "../../components/ui/ConfirmationModal";
+import { Switch } from "react-native-paper";
 
 type SettingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -28,9 +31,15 @@ export default function SettingsScreen() {
   const { user, setUser } = useAuth();
   const { resetOnboarding } = useOnboarding();
   const { totalScansPerformed, resetScanCounter } = useScan();
+  const { blurByDefault, setBlurByDefault, initialized } = useBlur();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const [username, setUsername] = useState(user?.profile.name || "");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Delete all scans state
+  const [showFirstDeleteModal, setShowFirstDeleteModal] = useState(false);
+  const [showSecondDeleteModal, setShowSecondDeleteModal] = useState(false);
+  const [isDeletingScans, setIsDeletingScans] = useState(false);
 
   const handleBack = () => {
     navigation.goBack();
@@ -170,6 +179,80 @@ export default function SettingsScreen() {
     }
   };
 
+  // Delete all scans functions
+  const handleDeleteAllScans = () => {
+    console.log("🗑️ User initiated delete all scans");
+    setShowFirstDeleteModal(true);
+  };
+
+  const handleFirstDeleteConfirm = () => {
+    console.log("🗑️ User confirmed first delete modal");
+    setShowFirstDeleteModal(false);
+    setShowSecondDeleteModal(true);
+  };
+
+  const handleFirstDeleteCancel = () => {
+    console.log("🗑️ User cancelled first delete modal");
+    setShowFirstDeleteModal(false);
+  };
+
+  const handleSecondDeleteConfirm = async () => {
+    console.log(
+      "🗑️ User confirmed second delete modal - proceeding with deletion"
+    );
+    setIsDeletingScans(true);
+
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("🗑️ Making API call to delete all scans");
+      const response = await fetch(`${AppConfig.api.baseUrl}/api/user/delete`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          "❌ Delete API response not ok:",
+          response.status,
+          errorText
+        );
+        throw new Error(`Failed to delete scans: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Delete all scans successful:", result);
+
+      Alert.alert(
+        "Success",
+        "All your scan history has been permanently deleted.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error("❌ Error deleting all scans:", error);
+      Alert.alert(
+        "Error",
+        "Failed to delete scan history. Please try again or contact support if the problem persists.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsDeletingScans(false);
+      setShowSecondDeleteModal(false);
+    }
+  };
+
+  const handleSecondDeleteCancel = () => {
+    console.log("🗑️ User cancelled second delete modal");
+    setShowSecondDeleteModal(false);
+  };
+
   const handleResetAppData = () => {
     Alert.alert(
       "⚠️ Reset All App Data",
@@ -257,6 +340,37 @@ export default function SettingsScreen() {
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Privacy & Legal</Text>
 
+          {/* Blur scan pictures by default toggle with background */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: "#f3f4f6",
+              borderRadius: 12,
+              paddingVertical: 16,
+              paddingHorizontal: 18,
+              marginBottom: 18,
+              borderWidth: 1,
+              borderColor: "#e5e7eb",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.04,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: "#222", fontWeight: "500" }}>
+              Blur scan pictures by default
+            </Text>
+            <Switch
+              value={blurByDefault}
+              onValueChange={setBlurByDefault}
+              color="#3b82f6"
+              disabled={!initialized}
+            />
+          </View>
+
           <TouchableOpacity
             style={[
               styles.saveButton,
@@ -272,6 +386,21 @@ export default function SettingsScreen() {
             onPress={handleTermsOfUse}
           >
             <Text style={styles.saveButtonText}>Terms of Use</Text>
+          </TouchableOpacity>
+
+          {/* Delete All Scans Button */}
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              { backgroundColor: "#dc2626", marginTop: 12 },
+              isDeletingScans && styles.saveButtonDisabled,
+            ]}
+            onPress={handleDeleteAllScans}
+            disabled={isDeletingScans}
+          >
+            <Text style={styles.saveButtonText}>
+              {isDeletingScans ? "Deleting..." : "DELETE ALL SCANS"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -332,6 +461,31 @@ export default function SettingsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* First Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showFirstDeleteModal}
+        title="Delete All Scans?"
+        message="Are you sure you want to delete all your scan history? This will remove all your poop scan data from your account."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        onConfirm={handleFirstDeleteConfirm}
+        onCancel={handleFirstDeleteCancel}
+        isDestructive={true}
+      />
+
+      {/* Second Delete Confirmation Modal */}
+      <ConfirmationModal
+        visible={showSecondDeleteModal}
+        title="Final Confirmation"
+        message="This action cannot be undone. All your scan history will be permanently deleted from our servers. Are you absolutely sure you want to proceed?"
+        confirmText="DELETE FOREVER"
+        cancelText="Keep My Data"
+        onConfirm={handleSecondDeleteConfirm}
+        onCancel={handleSecondDeleteCancel}
+        isDestructive={true}
+        isLoading={isDeletingScans}
+      />
     </View>
   );
 }

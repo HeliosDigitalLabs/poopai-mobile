@@ -3,7 +3,10 @@ import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { authService } from "./authService";
 import { getDeviceId } from "../../utils/deviceId";
-import { SocialAuthConfig } from "../../config/socialAuthConfig";
+import {
+  SocialAuthConfig,
+  validateSocialAuthConfig,
+} from "../../config/socialAuthConfig";
 
 // Dynamically import Google Sign-In to avoid runtime errors in Expo Go
 let GoogleSignin: any = null;
@@ -27,8 +30,18 @@ class SocialAuthService {
   }
 
   private initializeGoogleSignIn() {
-    // Configure Google Sign-In only if available
+    // Validate configuration first
+    const isConfigValid = validateSocialAuthConfig();
+
+    // Configure Google Sign-In only if available and properly configured
     if (GoogleSignin) {
+      if (!isConfigValid) {
+        console.warn(
+          "⚠️ Google Sign-In configuration is incomplete. Please update config/socialAuthConfig.ts with your actual credentials."
+        );
+        return;
+      }
+
       try {
         GoogleSignin.configure({
           webClientId: SocialAuthConfig.google.webClientId,

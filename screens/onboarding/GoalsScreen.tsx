@@ -44,7 +44,7 @@ export default function GoalsScreen({ onNext, onBack }: GoalsScreenProps) {
     <QuizScreenLayout
       onBack={onBack}
       showBackButton={false}
-      questionText="Set a goal. Poop better."
+      questionText="Commit to pooping better by setting at least one goal."
       subtitle="Select all that apply"
       enableScrolling={false}
     >

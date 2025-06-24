@@ -194,7 +194,7 @@ export default function MainQuizGridButtons({
     },
     {
       title: "I'm Just Curious",
-      subtitle: "Let's see what happens",
+      subtitle: "Just exploring",
       gradient: ["#8B5CF6", "#6D28D9"] as [string, string], // Enhanced purple gradient
       icon: "🤔",
       value: "I'm just curious what my poop score will be",

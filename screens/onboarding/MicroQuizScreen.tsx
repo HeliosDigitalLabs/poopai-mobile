@@ -83,7 +83,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Got it. Let's make sure PoopAI can give you the best help possible.",
+                  text: "Got it. Let's make sure I can give you the best help possible.",
                 },
               ]}
               onComplete={() => setCurrentStep("health-conditions")}
@@ -98,7 +98,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Got it. Let's make sure PoopAI can give you the best tracking data.",
+                  text: "Got it. Let's make sure I can give you the best tracking data.",
                 },
               ]}
               onComplete={() => setCurrentStep("tracking-conditions")}
@@ -129,7 +129,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Thanks. PoopAI will consider that when analyzing your poop.",
+                  text: "Thanks. I'll keep that in mind when analyzing your poop.",
                 },
               ]}
               onComplete={() => setCurrentStep("health-symptoms")}
@@ -152,7 +152,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Thanks. PoopAI will consider that when analyzing your poop.",
+                  text: "Thanks, I'll remember that. Just one more thing before we get started.",
                   buttonText: "Continue",
                   onButtonPress: () => setCurrentStep("health-goals"),
                 },
@@ -177,7 +177,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Nice. PoopAI will remind you of this in your results and history.",
+                  text: "Congrats! You're one step closer to healthier poops.",
                 },
               ]}
               onComplete={() => setCurrentStep("final-message")}
@@ -201,7 +201,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Thanks. PoopAI will consider that when analyzing your poop.",
+                  text: "Thanks. I'll consider that when analyzing your poop.",
                   buttonText: "Continue",
                   onButtonPress: () => setCurrentStep("tracking-symptoms"),
                 },
@@ -226,7 +226,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Thanks. PoopAI will consider that when analyzing your poop.",
+                  text: "Thanks, I'll remember that. Just two more things before we get started.",
                   buttonText: "Continue",
                   onButtonPress: () => setCurrentStep("tracking-frequency"),
                 },
@@ -307,7 +307,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Now let's start scanning some poop",
+                  text: "Now let's start scanning some poop!",
                   buttonText: "Let's go!",
                   onButtonPress: goToCamera,
                 },
@@ -357,7 +357,7 @@ export default function MicroQuizScreen() {
             <OnboardingScreenComponent
               messages={[
                 {
-                  text: "Enough talking, let's scan some poop!",
+                  text: "Now enough talking, let's scan some poop!",
                   buttonText: "Scan now",
                   onButtonPress: goToCamera,
                 },

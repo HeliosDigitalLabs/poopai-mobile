@@ -2,6 +2,7 @@ import { AnalysisData } from "./api";
 
 export type RootStackParamList = {
   Onboarding: undefined;
+  PreQuiz: undefined;
   MicroQuiz: undefined;
   Personalization: {
     reason: "laughs" | "curious" | "gut" | "problem" | "skip";

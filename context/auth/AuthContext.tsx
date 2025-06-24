@@ -300,7 +300,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginWithGoogle = async () => {
     try {
-      setIsLoading(true);
+      // Don't set global isLoading for social auth - it interferes with modal behavior
       console.log("🔵 Starting Google authentication...");
 
       const result = await socialAuthService.signInWithGoogle();
@@ -352,14 +352,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error("Google authentication error:", error);
       throw new Error(error.message || "Google authentication failed");
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const loginWithApple = async () => {
     try {
-      setIsLoading(true);
+      // Don't set global isLoading for social auth - it interferes with modal behavior
       console.log("🍎 Starting Apple authentication...");
 
       const result = await socialAuthService.signInWithApple();
@@ -408,8 +406,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error("Apple authentication error:", error);
       throw new Error(error.message || "Apple authentication failed");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -433,10 +429,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setToken(null);
     setShowAuthOverlay(false); // Hide any auth modals
-    
+
     // DON'T clear first-time user tracking - once they've been through name customization,
     // they shouldn't see it again even after logout/login
-    
+
     // For manual logout, also clear authentication history to prevent ReSignInModal
     await AsyncStorage.multiRemove([
       "authToken",

@@ -1,6 +1,6 @@
 /**
  * API Type Definitions
- * 
+ *
  * This file contains TypeScript type definitions for all API requests
  * and responses used in the PoopAI application.
  */
@@ -17,6 +17,7 @@ export interface AnalyzeImageRequest {
  * Server response from image analysis
  */
 export interface AnalyzeImageResponse {
+  scan_id: string; // Analysis ID from the database (backend sends as scan_id)
   bristolName: string;
   score: number;
   bristolType: number;
@@ -33,6 +34,7 @@ export interface AnalyzeImageResponse {
  */
 export interface AnalysisData {
   // Server response fields (used directly)
+  id?: string; // Analysis ID from the database (optional for backward compatibility)
   bristolName: string;
   score: number;
   bristolType: number;
@@ -42,7 +44,7 @@ export interface AnalysisData {
   fiberJudgement: string;
   recommendation: string;
   capturedAt: string;
-  
+
   // Frontend-generated data
   maxScore: number;
   timestamp: string;

@@ -72,7 +72,7 @@ export default function QuizScreen({
   const renderMainGoalScreen = () => (
     <QuizScreenLayout
       showBackButton={false}
-      questionText="How can I best help you?"
+      questionText="First off, what brings you here?"
       enableScrolling={false}
     >
       <MainQuizGridButtons

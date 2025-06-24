@@ -10,6 +10,7 @@ import {
   Dimensions,
   Modal,
   Image,
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -17,6 +18,8 @@ import { RootStackParamList } from "../../types/navigation";
 import { ScanService, ScanData } from "../../services/analysis/scanService";
 import { BlurView } from "expo-blur";
 import { logEvent } from "../../lib/analytics";
+import DeleteConfirmationModal from "../../components/ui/DeleteConfirmationModal";
+import { Ionicons } from "@expo/vector-icons";
 import {
   CALENDAR_OPENED,
   CALENDAR_DAY_CLICKED,
@@ -46,6 +49,9 @@ export default function CalendarScreen({ navigation }: Props) {
   const [signedImageUrls, setSignedImageUrls] = useState<
     Record<string, string>
   >({});
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [scanToDelete, setScanToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const screenStartTime = useRef<number>(Date.now());
 
   // Track calendar opened
@@ -74,6 +80,12 @@ export default function CalendarScreen({ navigation }: Props) {
     const grouped = ScanService.groupScansByDate(scans);
     setScansByDate(grouped);
   }, [scans]);
+
+  // Debug: Watch for deleteModalVisible changes
+  useEffect(() => {
+    console.log("🔍 deleteModalVisible changed to:", deleteModalVisible);
+    console.log("🔍 scanToDelete changed to:", scanToDelete);
+  }, [deleteModalVisible, scanToDelete]);
 
   const loadScans = async () => {
     try {
@@ -112,6 +124,57 @@ export default function CalendarScreen({ navigation }: Props) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteScan = (scanId: string) => {
+    console.log("🗑️ Delete button pressed for scan:", scanId);
+    setModalVisible(false); // Hide the calendar modal
+    setScanToDelete(scanId);
+    setDeleteModalVisible(true);
+    console.log("🗑️ State should be updated now");
+  };
+
+  const confirmDeleteScan = async () => {
+    if (!scanToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await ScanService.deleteScan(scanToDelete);
+
+      // Remove the scan from local state
+      setScans((prevScans) =>
+        prevScans.filter((scan) => scan.id !== scanToDelete)
+      );
+
+      // Remove signed URL for the deleted scan
+      setSignedImageUrls((prevUrls) => {
+        const newUrls = { ...prevUrls };
+        delete newUrls[scanToDelete];
+        return newUrls;
+      });
+
+      console.log("✅ Scan deleted successfully");
+    } catch (error) {
+      console.error("❌ Failed to delete scan:", error);
+      Alert.alert(
+        "Delete Failed",
+        "There was an error deleting the scan. Please try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalVisible(false);
+      // Reopen the calendar modal if a date is selected
+      if (selectedDate) setModalVisible(true);
+      setScanToDelete(null);
+    }
+  };
+
+  const cancelDeleteScan = () => {
+    setDeleteModalVisible(false);
+    // Reopen the calendar modal if a date is selected
+    if (selectedDate) setModalVisible(true);
+    setScanToDelete(null);
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -439,23 +502,57 @@ export default function CalendarScreen({ navigation }: Props) {
               <ScrollView style={styles.modalScroll}>
                 {selectedDateScans.map((scan, index) => (
                   <View key={scan.id} style={styles.scanItem}>
+                    {/* Debug: Log scan ID */}
+                    {(() => {
+                      console.log("📊 Rendering scan with ID:", scan.id);
+                      return null;
+                    })()}
+
                     <View style={styles.scanHeader}>
-                      <View
+                      <View style={styles.scanHeaderLeft}>
+                        <View
+                          style={[
+                            styles.bristolIndicator,
+                            {
+                              backgroundColor: getBristolColor(
+                                scan.analysis.bristolType
+                              ),
+                            },
+                          ]}
+                        />
+                        <Text style={styles.scanTime}>
+                          {formatTime(scan.created_at)}
+                        </Text>
+                        <Text style={styles.bristolType}>
+                          Type {scan.analysis.bristolType}
+                        </Text>
+                      </View>
+
+                      {/* Delete Button */}
+                      <Pressable
                         style={[
-                          styles.bristolIndicator,
+                          styles.deleteButton,
                           {
-                            backgroundColor: getBristolColor(
-                              scan.analysis.bristolType
-                            ),
+                            backgroundColor: "rgba(255, 0, 0, 0.1)",
+                            borderRadius: 16,
                           },
                         ]}
-                      />
-                      <Text style={styles.scanTime}>
-                        {formatTime(scan.created_at)}
-                      </Text>
-                      <Text style={styles.bristolType}>
-                        Type {scan.analysis.bristolType}
-                      </Text>
+                        onPress={() => {
+                          console.log(
+                            "🔥 Pressable pressed, scan ID:",
+                            scan.id
+                          );
+                          handleDeleteScan(scan.id);
+                        }}
+                        disabled={isDeleting}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="rgba(220, 38, 38, 0.8)"
+                        />
+                      </Pressable>
                     </View>
 
                     {/* Scan Image */}
@@ -489,6 +586,20 @@ export default function CalendarScreen({ navigation }: Props) {
           </View>
         </BlurView>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onDelete={confirmDeleteScan}
+        onKeep={cancelDeleteScan}
+      />
+
+      {/* Debug: Log modal state */}
+      {(() => {
+        console.log("🔍 Modal state - deleteModalVisible:", deleteModalVisible);
+        console.log("🔍 Modal state - scanToDelete:", scanToDelete);
+        return null;
+      })()}
     </SafeAreaView>
   );
 }
@@ -729,7 +840,13 @@ const styles = StyleSheet.create({
   scanHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
+  },
+  scanHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   bristolIndicator: {
     width: 12,
@@ -778,5 +895,26 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 120,
     borderRadius: 12,
+  },
+  deleteButton: {
+    padding: 12,
+    zIndex: 1000,
+    elevation: 5,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 44,
+    minHeight: 44,
+  },
+  deleteButtonBlur: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
 });
